@@ -7,7 +7,7 @@ import shutil
 import matplotlib.image as mpimg
 
 
-from PIL import Image, ImageDraw
+# запрос в вк_апи
 TOKEN_USER = open("config.txt").readline()
 VERSION = 5.199
 file_path=''
@@ -18,6 +18,8 @@ params={'access_token': TOKEN_USER,
         'v': VERSION
         })
 data = response.json()['response'][0]
+
+#перевод в шестнадцатеричный вид цвета из файла
 def color_to_hex(color_name):
     colors = {
         "бордовый": "#800020",
@@ -37,10 +39,12 @@ def read_color_from_file(file_path):
 file_path = 'color.txt'
 color_user = read_color_from_file(file_path)
 
+#изменение шрифта
 def set_style():
     # Set font
     plt.rcParams['font.family'] = 'sans-serif'
     plt.rcParams['font.sans-serif'] = 'STIXGeneral'
+#функция сохранения фотографии, чтобы потом вставить её в резюме
 def save_image_from_url(image_url, file_path):
         try:
                 response = requests.get(image_url, stream=True)
@@ -58,7 +62,7 @@ def save_image_from_url(image_url, file_path):
 image_url = data['photo_400_orig']
 save_image_from_url(image_url, file_path)
 
-
+#создание qr-кода, который отсылает на страницу пользователя
 def create_qr_code(url, scale=6):
         # Generate QR code
         qr = qrcode.QRCode(
@@ -77,14 +81,14 @@ def create_qr_code(url, scale=6):
         byte_arr.seek(0)  # Seek back to the beginning of the BytesIO object
         return byte_arr
 
-
+# размещение qr-кода на странице
 def add_qr_code(fig, ax, url):
         qr_code = create_qr_code(url)
         imagebox = OffsetImage(plt.imread(qr_code), zoom=0.2)
         ab = AnnotationBbox(imagebox, (0.86, 0.09))
         ax.add_artist(ab)
 
-
+#перенос текста на другую строку
 def wrap_text(text, max_count):
         words = text.split()
         wrapped_text = ''
@@ -102,11 +106,11 @@ def wrap_text(text, max_count):
                                 count += len(word)
         return wrapped_text
 
-
+#подсчёт количества строк, чтобы сдвигать координату текста
 def count_lines(text):
         return text.count('\n') + 1
 
-
+#общая функция, в которой прописаны все элементы, отображаемые в резюме
 def display_profile(data, color_user):
         set_style()
         fig, ax = plt.subplots(figsize=(11.69, 8.27))
@@ -121,8 +125,8 @@ def display_profile(data, color_user):
         plt.annotate(wrap_text(data['about'], 60), (.02, .86 - 0.07 * count_lines(data['about'])), weight='regular',
                      fontsize=10)
 
-        start_y_position = .745  # Initial y position for the first career entry
-        vertical_shift = 0.15  # Adjust this value to create space between career entries
+        start_y_position = .745
+        vertical_shift = 0.15
         plt.annotate("Карьера", (.02, .745), weight='bold', fontsize=10, color=color_user)
         for i, career_entry in enumerate(data['career']):
                 y_position = start_y_position - i * vertical_shift
@@ -146,10 +150,12 @@ def display_profile(data, color_user):
                      weight='regular', fontsize=10)
         plt.axis('off')  # Turn off the axis
 
-        filename_prefix = "Резюме " + data['first_name'] + " " + data['last_name']
-        add_qr_code(fig, ax, 'https://vk.com/id' + str(data['id']))  # Replace with the actual URL
 
-        # Load and process the image
+
+        #обработка qr-кода
+        add_qr_code(fig, ax, 'https://vk.com/id' + str(data['id']))
+
+        # Обработка изображения
         img = mpimg.imread('название_файла.jpg')
         imagebox = OffsetImage(img, zoom=0.2)
         ab = AnnotationBbox(imagebox, (0.85, 0.89), frameon=False, pad=0.2)
@@ -158,15 +164,17 @@ def display_profile(data, color_user):
         DECORATIVE_LINE_COLOR = '#007ACC'
         DECORATIVE_LINE_ALPHA = 0.0
         DECORATIVE_LINE_WIDTH = 100
-        # Add decorative lines
+
+        # Добавление декоративной линии
         ax.axvline(x=.5, ymin=0, ymax=1, color=DECORATIVE_LINE_COLOR, alpha=DECORATIVE_LINE_ALPHA,
                    linewidth=DECORATIVE_LINE_WIDTH)
         plt.axvline(x=.99, color='#000000', alpha=0.5, linewidth=400)
 
-        # Save as PDF
+        # Сохранение
+        filename_prefix = "Резюме " + data['first_name'] + " " + data['last_name']
         plt.savefig(f"{filename_prefix}.pdf", format="pdf")  # Save as PDF
 
-        # Save as PNG
+
         plt.savefig(f"{filename_prefix}.png", format="png")  # Save as PNG
         plt.show()
 
