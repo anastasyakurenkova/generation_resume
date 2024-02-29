@@ -10,7 +10,7 @@ import matplotlib.image as mpimg
 # запрос в вк_апи
 TOKEN_USER = open("config.txt").readline()
 VERSION = 5.199
-file_path=''
+file_path1=''
 
 response = requests.get('https://api.vk.com/method/users.get',
 params={'access_token': TOKEN_USER,
@@ -35,6 +35,7 @@ def color_to_hex(color_name):
 def read_color_from_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         color_name = file.read().strip()
+        print(color_name)
         return color_to_hex(color_name)
 file_path = 'color.txt'
 color_user = read_color_from_file(file_path)
@@ -60,7 +61,8 @@ def save_image_from_url(image_url, file_path):
 
 
 image_url = data['photo_400_orig']
-save_image_from_url(image_url, file_path)
+file_path1='название_файла.jpg'
+save_image_from_url(image_url, file_path1)
 
 #создание qr-кода, который отсылает на страницу пользователя
 def create_qr_code(url, scale=6):
